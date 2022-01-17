@@ -4,7 +4,8 @@ Created on Thu Oct  1 15:16:30 2020
 
 @author: ThibautJacqmin
 """
-
+#r = pyvisa.ResourceManager()
+#print('Liste des appareils connectés :\n', r.list_resources())
 
 import pyvisa
 import matplotlib.pyplot as plt
@@ -80,6 +81,10 @@ class DS1054(Instrument):
         plt.plot(times, data)
         return times, data
 
+    def get_amplitude(self, channel):
+        times, data = self.get_curve(channel)
+        print(times)
+
 
 class DG1022(Instrument):
     """
@@ -95,8 +100,41 @@ class DG1022(Instrument):
         self.write("OUTP ON")
 
 
-oscillo = DS1054("USB0::0x1AB1::0x04CE::DS1ZA203715553::INSTR")
+"""
+ENCODAGE
+"""
+
+amplitude_values = np.array(
+    [i for i in range(2, 22, 2)])  # valeurs crete-crete de 2V a 20V
+bit_values = [format(i, 'b')
+              for i in range(0, 10)]  # valeurs bin binaires de 0 a 9
+
+
+#oscillo = DS1054("USB0::0x1AB1::0x04CE::DS1ZA203715553::INSTR")
+oscillo = DS1054('USB0::0x1AB1::0x04CE::DS1ZA171307560::INSTR')
 #generateur = DG1022("USB0::0x1AB1::0x0588::DG1D123203121::INSTR")
 #generateur.set_sinusoide(5000, 3, 0)
 
-# oscillo.plot_channel(1)
+# oscillo.get_amplitude(1)
+#freq = 1.5e3
+"""
+chiffre = 14
+
+dizaine = chiffre // 10
+reste = chiffre % 10
+
+print(dizaine, reste)
+print(dizaine, reste)
+"""
+
+st = ""
+st_bytes = ' '.join(format(ord(x), 'b') for x in st)
+"""
+for i in st_bytes:
+    if len(st_bytes[i]) < 8:
+        difference = 8 - len(st_bytes[i])
+        st_bytes =  
+"""
+print(st_bytes)
+difference = 8 - len(st_bytes)
+print(difference)
