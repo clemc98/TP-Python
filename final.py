@@ -153,3 +153,18 @@ class MOM():
 
 
 oscillo = DS1054('USB0::0x1AB1::0x04CE::DS1ZA163454295::INSTR')
+
+"""
+oscillo.set_timebase(0.0002)
+print(oscillo.get_timebase())
+print(oscillo.get_vertical_offset(1))
+oscillo.plot_curve(1)
+
+
+modulation = MOM()
+texte = 'Hello world!'
+encodage = modulation.encoding(texte)
+print(encodage,'\n')
+decodage = modulation.decoding(encodage)
+print(decodage)
+"""
