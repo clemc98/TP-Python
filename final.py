@@ -6,7 +6,7 @@ import math
 bit_values = {'0000':6.25, '0001':12.5, '0010':18.75, '0011':25, '0100':31.25, '0101':37.5, '0110':43.75, '0111':50, '1000':56.25, '1001':62.5, '1010':68.75, '1011':75, '1100':81.25, '1101':87.5, '1110':93.75, '1111':100} 
 
 r = pyvisa.ResourceManager()
-print('Liste des appareils connectés :\n', r.list_resources())
+print('Liste des appareils connectés :\n', r.list_resources(), '\n')
 
 ####################################################################
 """
@@ -98,29 +98,32 @@ class MOM():
     
 ############################################################################################################
 
-    def volts_to_list(self, periode):
-        x, y = DS1054.get_curve(1)[0], DS1054.get_curve(1)[1]
+    def volts_to_list(self, x, y, periode):
          
         volts_list =[[]]
         a=0
-        while a + self.periode <= len(x):
-            #moyenne = np.mean(y[a:a+periode])
-            #retourne valeur crete-crete de la foction dans une periode donnee
-            target = max(y[a:a + self.periode])-min(y[a:-1])        
+        i = 0
+        seuil = (max(y)-min(y)) / (100 - 6.25)
+        while (a + periode) <= len(x):
+            #retourne valeur crete-crete de la fonction dans une periode donnee
+            y_max_periode = (seuil*(max(y[a:a+periode]) - 6.25))*1e3
+            y_min_periode = (seuil*(min(y[a:a+periode]) - 6.25))*1e3
+            target = abs(y_max_periode - y_min_periode)      
             
-            #compare la valeur crete crete avec dictionnaire de valeurs
+            #compare la valeur crete crete avec dictionnaire de valeurs et retourne la valeur la plus proche
             min_diff = min(abs(v - target) for v in bit_values.values())
-            closest_keys = [k for k,v in bit_values.items() if abs(v-target) == min_diff]
+            closest_keys = [v for k,v in bit_values.items() if abs(v-target) == min_diff]
             
-            #ajoute dans une liste les amplitudes crete-crete
-            i = 0
-            if target != 0:
-                volts_list[i].append(bit_values.get(closest_keys))
+            #ajoute dans une liste les amplitudes crete-crete           
+            if target != min(y):
+                volts_list[i].append(closest_keys[0])          
             else:
                 volts_list.append([])
                 i += 1
                 
-        a += periode    
+            a += periode 
+            
+        return volts_list  
 
 ###############################################################################################    
         
@@ -153,18 +156,15 @@ class MOM():
 
 
 oscillo = DS1054('USB0::0x1AB1::0x04CE::DS1ZA163454295::INSTR')
+oscillo.plot_curve(2)
+periode = int((7/1500) / ((float(oscillo.get_timebase())*12)/1200))
 
 """
-oscillo.set_timebase(0.0002)
-print(oscillo.get_timebase())
-print(oscillo.get_vertical_offset(1))
-oscillo.plot_curve(1)
-
+x, y = oscillo.get_curve(2)[0], oscillo.get_curve(2)[1]
+seuil = (100 - 6.25)/(max(y)-min(y))
+y_max_periode = (seuil*abs(y) + 6.25)
+"""
 
 modulation = MOM()
-texte = 'Hello world!'
-encodage = modulation.encoding(texte)
-print(encodage,'\n')
-decodage = modulation.decoding(encodage)
-print(decodage)
-"""
+print(modulation.encoding('Toto'), '\n')
+print(modulation.volts_to_list(oscillo.get_curve(2)[0], oscillo.get_curve(2)[1], periode))
